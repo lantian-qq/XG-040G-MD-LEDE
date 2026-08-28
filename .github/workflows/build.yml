@@ -92,9 +92,9 @@ jobs:
         mkbootimg --help || true
         MKBOOTIMG_PATH=$(which mkbootimg)
         if [ -n "$MKBOOTIMG_PATH" ]; then
-          echo "✅ mkbootimg found at: $MKBOOTIMG_PATH"
+          echo "mkbootimg found at: $MKBOOTIMG_PATH"
         else
-          echo "⚠️ mkbootimg not found in PATH"
+          echo "mkbootimg not found in PATH"
         fi
         
         sudo timedatectl set-timezone "${TZ}"
@@ -132,28 +132,28 @@ jobs:
         # 修改默认 IP 为 192.168.10.1
         sed -i 's/192.168.1.1/192.168.10.1/g' package/base-files/files/bin/config_generate 2>/dev/null || true
         
-        echo "✅ DIY Part 1 完成"
+        echo "DIY Part 1 完成"
 
     - name: DIY Part 2 - 添加插件
       run: |
         cd openwrt
         
         # TurboACC 加速
-        echo "📦 添加 TurboACC..."
+        echo "添加 TurboACC..."
         curl -sSL https://raw.githubusercontent.com/chenmozhijin/turboacc/luci/add_turboacc.sh -o add_turboacc.sh 2>/dev/null && \
-          bash add_turboacc.sh 2>/dev/null || echo "⚠️ TurboACC 添加失败"
+          bash add_turboacc.sh 2>/dev/null || echo "TurboACC 添加失败"
         rm -f add_turboacc.sh
         
         # 温度状态插件
-        echo "📦 添加温度状态插件..."
+        echo "添加温度状态插件..."
         git clone --depth 1 https://github.com/gSpotx2f/luci-app-temp-status package/luci-app-temp-status 2>/dev/null || true
         git clone --depth 1 https://github.com/gSpotx2f/luci-app-cpu-perf package/luci-app-cpu-perf 2>/dev/null || true
         
         # OpenClash
-        echo "📦 添加 OpenClash..."
+        echo "添加 OpenClash..."
         git clone --depth 1 https://github.com/vernesong/OpenClash.git package/luci-app-openclash 2>/dev/null || true
         
-        echo "✅ DIY Part 2 完成"
+        echo "DIY Part 2 完成"
 
     - name: Update & Install feeds
       working-directory: ./openwrt
@@ -168,65 +168,71 @@ jobs:
         [ -f feeds/packages/net/onionshare-cli/Makefile ] && {
           sed -i '/+python3-unidecode/d' feeds/packages/net/onionshare-cli/Makefile 2>/dev/null || true
           sed -i '/+python3-pysocks/d' feeds/packages/net/onionshare-cli/Makefile 2>/dev/null || true
-          echo "✅ 修复 onionshare-cli 警告"
+          echo "修复 onionshare-cli 警告"
         }
 
     - name: Generate config
       run: |
         cd openwrt
+        rm -f .config
         
         # 生成 XG-040G-MD 配置 (包含 PON 支持)
-        cat > .config << 'CONFIGEOF'
-# ==================== 目标设备 ====================
-CONFIG_TARGET_airoha=y
-CONFIG_TARGET_airoha_an7581=y
-CONFIG_TARGET_PROFILE="DEVICE_nokia_xg-040g-md"
-CONFIG_TARGET_airoha_an7581_DEVICE_nokia_xg-040g-md=y
-
-# ==================== PON 支持 ====================
-# Airoha PON 驱动 (xPON for AN7581)
-CONFIG_PACKAGE_kmod-airoha-pon=y
-CONFIG_PACKAGE_kmod-airoha-xpon-en757x=y
-
-# ==================== Airoha NPU ====================
-CONFIG_PACKAGE_airoha-en7581-npu-firmware=y
-CONFIG_PACKAGE_airoha-en7581-mt7996-npu-firmware=y
-CONFIG_PACKAGE_airoha-en8811h-firmware=y
-CONFIG_PACKAGE_kmod-phy-airoha-en8811h=y
-CONFIG_PACKAGE_luci-app-airoha-npu=y
-
-# ==================== LuCI 支持 ====================
-CONFIG_PACKAGE_luci=y
-CONFIG_LUCI_AUTOREMOVE=y
-CONFIG_PACKAGE_luci-i18n-base-zh-cn=y
-CONFIG_PACKAGE_luci-theme-bootstrap=y
-
-# ==================== 防火墙 ====================
-CONFIG_PACKAGE_luci-app-firewall=y
-CONFIG_PACKAGE_luci-i18n-firewall-zh-cn=y
-
-# ==================== 网络管理 ====================
-CONFIG_PACKAGE_luci-app-ddns=y
-CONFIG_PACKAGE_luci-i18n-ddns-zh-cn=y
-CONFIG_PACKAGE_luci-app-upnp=y
-CONFIG_PACKAGE_luci-i18n-upnp-zh-cn=y
-CONFIG_PACKAGE_luci-app-vlmcsd=y
-
-# ==================== 文件共享 ====================
-CONFIG_PACKAGE_luci-app-samba4=y
-CONFIG_PACKAGE_luci-i18n-samba4-zh-cn=y
-
-# ==================== 磁盘管理 ====================
-CONFIG_PACKAGE_luci-app-diskman=y
-
-# ==================== 代理工具 ====================
-CONFIG_PACKAGE_luci-app-openclash=y
-
-# ==================== 系统监控 ====================
-CONFIG_PACKAGE_luci-app-temp-status=y
-CONFIG_PACKAGE_luci-app-cpu-perf=y
-CONFIG_PACKAGE_luci-app-turboacc=y
-CONFIGEOF
+        echo "CONFIG_TARGET_airoha=y" >> .config
+        echo "CONFIG_TARGET_airoha_an7581=y" >> .config
+        echo 'CONFIG_TARGET_PROFILE="DEVICE_nokia_xg-040g-md"' >> .config
+        echo "CONFIG_TARGET_airoha_an7581_DEVICE_nokia_xg-040g-md=y" >> .config
+        echo "" >> .config
+        
+        echo "# PON 支持" >> .config
+        echo "CONFIG_PACKAGE_kmod-airoha-pon=y" >> .config
+        echo "CONFIG_PACKAGE_kmod-airoha-xpon-en757x=y" >> .config
+        echo "" >> .config
+        
+        echo "# Airoha NPU" >> .config
+        echo "CONFIG_PACKAGE_airoha-en7581-npu-firmware=y" >> .config
+        echo "CONFIG_PACKAGE_airoha-en7581-mt7996-npu-firmware=y" >> .config
+        echo "CONFIG_PACKAGE_airoha-en8811h-firmware=y" >> .config
+        echo "CONFIG_PACKAGE_kmod-phy-airoha-en8811h=y" >> .config
+        echo "CONFIG_PACKAGE_luci-app-airoha-npu=y" >> .config
+        echo "" >> .config
+        
+        echo "# LuCI 支持" >> .config
+        echo "CONFIG_PACKAGE_luci=y" >> .config
+        echo "CONFIG_LUCI_AUTOREMOVE=y" >> .config
+        echo "CONFIG_PACKAGE_luci-i18n-base-zh-cn=y" >> .config
+        echo "CONFIG_PACKAGE_luci-theme-bootstrap=y" >> .config
+        echo "" >> .config
+        
+        echo "# 防火墙" >> .config
+        echo "CONFIG_PACKAGE_luci-app-firewall=y" >> .config
+        echo "CONFIG_PACKAGE_luci-i18n-firewall-zh-cn=y" >> .config
+        echo "" >> .config
+        
+        echo "# 网络管理" >> .config
+        echo "CONFIG_PACKAGE_luci-app-ddns=y" >> .config
+        echo "CONFIG_PACKAGE_luci-i18n-ddns-zh-cn=y" >> .config
+        echo "CONFIG_PACKAGE_luci-app-upnp=y" >> .config
+        echo "CONFIG_PACKAGE_luci-i18n-upnp-zh-cn=y" >> .config
+        echo "CONFIG_PACKAGE_luci-app-vlmcsd=y" >> .config
+        echo "" >> .config
+        
+        echo "# 文件共享" >> .config
+        echo "CONFIG_PACKAGE_luci-app-samba4=y" >> .config
+        echo "CONFIG_PACKAGE_luci-i18n-samba4-zh-cn=y" >> .config
+        echo "" >> .config
+        
+        echo "# 磁盘管理" >> .config
+        echo "CONFIG_PACKAGE_luci-app-diskman=y" >> .config
+        echo "" >> .config
+        
+        echo "# 代理工具" >> .config
+        echo "CONFIG_PACKAGE_luci-app-openclash=y" >> .config
+        echo "" >> .config
+        
+        echo "# 系统监控" >> .config
+        echo "CONFIG_PACKAGE_luci-app-temp-status=y" >> .config
+        echo "CONFIG_PACKAGE_luci-app-cpu-perf=y" >> .config
+        echo "CONFIG_PACKAGE_luci-app-turboacc=y" >> .config
         
         make defconfig
         
@@ -259,9 +265,9 @@ CONFIGEOF
         if [[ "${{ inputs.log_switch }}" == "true" ]]; then
             make -j1 V=s
         elif make -j$(nproc); then
-            echo "✅ 编译成功"
+            echo "编译成功"
         else
-            echo "⚠️ 编译失败，尝试单线程调试..."
+            echo "编译失败，尝试单线程调试..."
             make -j4 V=s
         fi
 
@@ -293,17 +299,17 @@ CONFIGEOF
         echo "release_tag=$(date +%Y.%m.%d)-V${{ github.run_number }}" >> $GITHUB_OUTPUT
         echo "release_name=$(date +%Y.%m.%d-%H%M)" >> $GITHUB_OUTPUT
         
-        cat > release.txt << EOF
-        🚀 OpenWrt 固件 - Nokia XG-040G-MD
+        cat > release.txt << 'EOF'
+        OpenWrt 固件 - Nokia XG-040G-MD
         ========================================
         
         设备型号: Nokia XG-040G-MD (Airoha AN7581)
-        编译时间: $(date +"%Y-%m-%d %H:%M")
-        源码仓库: ${{ env.REPO_URL }}
-        分支: ${{ env.REPO_BRANCH }}
+        编译时间: DATE_PLACEHOLDER
+        源码仓库: REPO_PLACEHOLDER
+        分支: BRANCH_PLACEHOLDER
         
-        📌 管理地址: 192.168.10.1
-        📌 默认账号: root / 无密码
+        管理地址: 192.168.10.1
+        默认账号: root / 无密码
         
         主要功能:
         - PON 光纤接入支持 (xPON GPON/EPON)
@@ -314,6 +320,10 @@ CONFIGEOF
         
         编译插件列表:
         EOF
+        
+        sed -i "s/DATE_PLACEHOLDER/$(date +'%Y-%m-%d %H:%M')/" release.txt
+        sed -i "s|REPO_PLACEHOLDER|${{ env.REPO_URL }}|" release.txt
+        sed -i "s|BRANCH_PLACEHOLDER|${{ env.REPO_BRANCH }}|" release.txt
         
         grep -h "luci-app-" ${{ env.FIRMWARE }}/*.manifest 2>/dev/null | awk -F':' '{print $NF}' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -oP 'luci-app-[a-zA-Z0-9_-]+' | sort -u | sed 's/^/- /' >> release.txt
         
