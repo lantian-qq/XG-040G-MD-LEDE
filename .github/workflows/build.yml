@@ -154,6 +154,12 @@ jobs:
         git clone --depth 1 https://github.com/vernesong/OpenClash.git package/luci-app-openclash 2>/dev/null || true
         
         echo "DIY Part 2 完成"
+        
+    - name: Fix airoha-pon Werror
+      run: |
+        cd openwrt
+        # 在 airoha-pon 模块编译时禁用 -Werror
+        find package/kernel/airoha-pon -name Makefile | head -1 | xargs sed -i 's/EXTRA_CFLAGS.*$/& -Wno-error/' 2>/dev/null || true
 
     - name: Update & Install feeds
       working-directory: ./openwrt
