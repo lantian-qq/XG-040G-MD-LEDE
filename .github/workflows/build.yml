@@ -261,16 +261,15 @@ jobs:
       id: compile
       run: |
         cd openwrt/
-
         if [[ "${{ inputs.log_switch }}" == "true" ]]; then
             make -j1 V=s
         elif make -j$(nproc); then
             echo "编译成功"
         else
-            echo "编译失败，尝试单线程调试..."
-            make -j4 V=s
+            echo "多线程编译失败，尝试单线程..."
+            make -j1 V=s | tail -200   # ← 只保留最后200行，避免日志撑爆
+            exit 1                      # ← 明确报错
         fi
-
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
         echo "FILE_DATE=_$(date +"%Y%m%d")" >> $GITHUB_ENV
