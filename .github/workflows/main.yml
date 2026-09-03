@@ -112,11 +112,13 @@ jobs:
       - name: 应用自定义脚本（第一阶段：源码修改）
         run: |
           cd /workdir/openwrt
+          cp $GITHUB_WORKSPACE/$DIY_P1_SH ./
           chmod +x ./$DIY_P1_SH && ./$DIY_P1_SH
 
       - name: 应用自定义脚本（第二阶段：配置修改）
         run: |
           cd /workdir/openwrt
+          cp $GITHUB_WORKSPACE/$DIY_P2_SH ./
           chmod +x ./$DIY_P2_SH && ./$DIY_P2_SH
 
       - name: 加载自定义设置到 .config
@@ -226,14 +228,18 @@ jobs:
             **源码**: coolsnowwolf/lede @ master
             **编译时间**: ${{ steps.tag.outputs.tag }}
 
+            ### PON 支持
+            固件已包含 GPON/XPON 内核模块（kmod-airoha-gpon-en757x / kmod-airoha-xpon-en757x），
+            可直接接入 PON 网络。
+
             ### 刷机说明
-            - **sysupgrade.bin**: 用于已安装 OpenWrt 的系统升级
+            - **sysupgrade.tar**: 用于已安装 OpenWrt 的系统升级
             - **factory-kernel.bin** + **factory-rootfs.bin**: 用于原始系统刷机
             - 刷机前请确认设备型号，避免刷错固件导致变砖
 
             ### Issue #14116 说明
             `kmod-airoha-xpon-en757x` 在 Linux 6.18 下存在编译问题
             （-Werror=implicit-function-declaration / missing-prototypes）。
-            当前 master 分支暂未包含该包，不影响编译。
+            编译脚本已通过放宽编译警告标志自动修复此问题。
           draft: false
           prerelease: false
