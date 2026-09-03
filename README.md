@@ -154,7 +154,6 @@ sed -i 's/CONFIG_PACKAGE_xxx=y/# CONFIG_PACKAGE_xxx is not set/' .config
 | 包名 | 说明 |
 |------|------|
 | `luci` | LuCI Web 管理界面 |
-| `helloworld` | 科学上网（需 helloworld feed） |
 | `luci-app-openvpn` | OpenVPN 客户端 |
 | `luci-app-vlmcsd` | KMS 服务 |
 | `luci-app-dockerman` | Docker 管理 |
