@@ -7,18 +7,27 @@
 # 工作目录：OpenWrt 源码根目录
 #=============================================================================
 
-# === 示例：修改默认配置 ===
-# sed -i 's/CONFIG_PACKAGE_xxx=y/# CONFIG_PACKAGE_xxx is not set/' .config
+echo ">>> diy-p2.sh 开始执行..."
 
-# === Nokia XG-040G-MD 特有配置 ===
-# 基本信息已在 workflow 中通过 cat >> .config 写入
-# 这里可以做更精细的调整
-
-# 确保 helloworld 被启用（科学上网插件）
+# === 确保 helloworld 被启用（科学上网插件）===
 sed -i 's/# CONFIG_PACKAGE_helloworld is not set/CONFIG_PACKAGE_helloworld=y/' .config 2>/dev/null || true
 sed -i 's/CONFIG_PACKAGE_helloworld is not set/CONFIG_PACKAGE_helloworld=y/' .config 2>/dev/null || true
 
-# === 针对 Nokia XG-040G-MD 的额外包 ===
+# === PON 相关配置 ===
+# 如果 airoha-pon 包存在，启用 PON 内核模块
+if [ -d "package/kernel/airoha-pon" ]; then
+  echo ">>> 启用 PON 内核模块..."
+  # 启用 GPON 模块（适用于大多数 PON 网络）
+  echo "CONFIG_PACKAGE_kmod-airoha-gpon-en757x=y" >> .config
+  # 启用 XPON 模块（适用于 XGSPON/10G-PON 网络）
+  echo "CONFIG_PACKAGE_kmod-airoha-xpon-en757x=y" >> .config
+  echo ">>> PON 模块已加入配置"
+else
+  echo ">>> [注意] airoha-pon 包不存在，PON 功能不可用"
+  echo ">>> 如需 PON 支持，请确保 diy-p1.sh 成功拉取了 airoha-pon 包"
+fi
+
+# === Nokia XG-040G-MD 推荐的额外包 ===
 # 该设备使用 AN7581 SoC（aarch64），支持以下可选功能：
 #   - kmod-sfp: SFP 光模块支持
 #   - kmod-phy-aeonsemi-as21xxx: Aeonsemi SFP PHY
