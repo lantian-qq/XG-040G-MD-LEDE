@@ -11,6 +11,7 @@
 | 分区方案 | UBI (SNAND, 128k block, 2048 page) |
 | Kernel Image | 8MB |
 | Rootfs Image | ~129MB |
+| PON 支持 | GPON / XPON (kmod-airoha-gpon-en757x / kmod-airoha-xpon-en757x) |
 
 ## 文件说明
 
@@ -116,15 +117,13 @@ luci → 系统 → 备份/升级 → 上传 sysupgrade.tar 文件
 
 - **Issue 状态**：Open（未修复）
 - **影响范围**：`airoha-pon` 包（commit `f7fd86e`）
-- **是否影响本工作流**：**暂不影响**。该 commit 目前不属于 master 分支的任何分支，`airoha-pon` 包尚未合入 master
+- **本工作流处理方式**：**已自动修复**。通过在 Makefile 中放宽 `-Werror` 标志，并尝试修复源码中的函数声明缺失问题
 
-### 修复建议
+### 修复措施（已内置到编译脚本）
 
-当 `airoha-pon` 被合入 master 后，在 `diy-p1.sh` 中启用以下修复：
-
-1. **添加缺失的函数声明**：在 `src/phy.c` 的 include 区域添加 `pma_dbg_reg_dump` 和 `normal_rx_bist_check` 的声明
-2. **放宽编译警告**：在 Makefile 中添加 `-Wno-error=missing-prototypes -Wno-error=implicit-function-declaration`
-3. **修复格式化警告**：将 `jiffies` 的 `%x` 格式改为正确的类型匹配
+1. **放宽编译警告**：在 airoha-pon Makefile 中添加 `-Wno-error=implicit-function-declaration -Wno-error=missing-prototypes -Wno-error=format` 等标志
+2. **添加缺失声明**：在 `src/phy.c` 中添加 `pma_dbg_reg_dump` 和 `normal_rx_bist_check` 的函数声明
+3. **修复格式化警告**：将 `jiffies` 的 `%x` 格式改为 `%lx`
 
 ## 自定义编译
 
