@@ -107,7 +107,7 @@ jobs:
       - name: 加载自定义配置
         run: |
           cd /workdir/openwrt
-          [ -e $CONFIG_FILE ] && cp $CONFIG_FILE .config
+          [ -e $GITHUB_WORKSPACE/$CONFIG_FILE ] && cp $GITHUB_WORKSPACE/$CONFIG_FILE .config || true
 
       - name: 应用自定义脚本（第一阶段：源码修改）
         run: |
