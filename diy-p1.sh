@@ -20,6 +20,10 @@ if [ ! -d "package/kernel/airoha-pon" ]; then
     git checkout FETCH_HEAD -- package/kernel/airoha-pon/ 2>/dev/null
     if [ $? -eq 0 ]; then
       echo ">>> airoha-pon 包已成功拉取"
+      # 修复 CRLF 换行符问题：上游部分文件使用 Windows CRLF，patch 期望 LF
+      echo ">>> 转换 CRLF -> LF 换行符..."
+      find package/kernel/airoha-pon -type f \( -name "*.c" -o -name "*.h" -o -name "Makefile" -o -name "Kbuild" \) -exec sed -i 's/\r$//' {} + 2>/dev/null || true
+      echo ">>> 换行符转换完成"
     else
       echo ">>> [警告] checkout 失败，尝试 git apply 方式..."
       git format-patch -1 FETCH_HEAD --stdout -- package/kernel/airoha-pon/ | git apply 2>/dev/null
@@ -38,6 +42,8 @@ echo ">>> [2/6] 修复 patch 应用失败问题..."
 PATCH_FILE="package/kernel/airoha-pon/patches/001-port-vendor-drivers-to-linux-6.18.patch"
 if [ -f "$PATCH_FILE" ]; then
   echo ">>> 修复 patch 文件: $PATCH_FILE"
+  # 确保 patch 文件本身也是 LF 换行符
+  sed -i 's/\r$//' "$PATCH_FILE" 2>/dev/null || true
   python3 << 'PYEOF'
 import re, sys
 
